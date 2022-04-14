@@ -1,3 +1,7 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
 class Dependency_GAT(nn.Module):
     def __init__(self, in_dim, out_dim, alpha, dependency_list):
         super(Dependency_GAT, self).__init__()
