@@ -56,7 +56,6 @@ class Dependency_GAT(nn.Module):
         # egde attention
         for dep_triple in dependency_triples:
             cur_governor = dep_triple[2]
-            cur_dependency = dep_triple[1]
             cur_dependent = dep_triple[0]
             
             e_governor_dependent = self.attn_weight(torch.cat((self.weight(_input[cur_governor]), self.weight(_input[cur_dependent])), -1))
@@ -65,9 +64,12 @@ class Dependency_GAT(nn.Module):
         # Normalize egde attention
         for dep_triple in dependency_triples:
             cur_governor = dep_triple[2]
-            cur_dependency = dep_triple[1]
             cur_dependent = dep_triple[0]
-            e_tensor[cur_governor] = self.softmax(e_tensor[cur_governor].view(1,len(e_tensor[cur_governor])))
+            
+            # masked attention
+            zero_attn_mask = -1e18*torch.ones_like(e_tensor[cur_governor])
+            masked_e = torch.where(e_tensor[cur_governor] > 0, e_tensor[cur_governor], zero_attn_mask)
+            e_tensor[cur_governor] = self.softmax(masked_e.view(1,len(masked_e)))
         
         return e_tensor
 
@@ -85,7 +87,6 @@ class Dependency_GAT(nn.Module):
         # Weighted sum based on the final attention weight
         for dep_triple in dependency_triples:
             cur_governor = dep_triple[2]
-            cur_dependency = dep_triple[1]
             cur_dependent = dep_triple[0]
 
             cur_attn = attn_score_tensor[cur_governor, cur_dependent] * self.weight(_input[cur_dependent])
