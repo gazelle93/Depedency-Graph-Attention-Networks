@@ -42,7 +42,6 @@ class Dependency_GAT(nn.Module):
         
         for dep_triple in dependency_triples:
             cur_governor = dep_triple[2]
-            cur_dependency = dep_triple[1]
             cur_dependent = dep_triple[0]
             
             self_loop_dict[cur_dependent] = self.weight(_input[cur_governor])
@@ -61,10 +60,9 @@ class Dependency_GAT(nn.Module):
             e_governor_dependent = self.attn_weight(torch.cat((self.weight(_input[cur_governor]), self.weight(_input[cur_dependent])), -1))
             e_tensor[cur_governor, cur_dependent] = e_governor_dependent
 
-        # Normalize egde attention
+        # Normalize edge attention
         for dep_triple in dependency_triples:
             cur_governor = dep_triple[2]
-            cur_dependent = dep_triple[0]
             
             # masked attention
             zero_attn_mask = -1e18*torch.ones_like(e_tensor[cur_governor])
