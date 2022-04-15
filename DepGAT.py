@@ -74,9 +74,9 @@ class Dependency_GATLayer(nn.Module):
         
         return output_list
     
-class GAT(nn.Module):
+class Dependency_GAT(nn.Module):
     def __init__(self, in_dim, out_dim, alpha, dependency_list, num_layers=1):
-        super(GAT, self).__init__()
+        super(Dependency_GAT, self).__init__()
         # in_dim: number of tokens
         # out_dim: dimension of word embedding
         # dependency_list: the entire dependency types
