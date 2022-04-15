@@ -21,13 +21,6 @@ def preprocessing(_input_text, _nlp_pipeline):
                 cur_dep_triple = (cur_id, cur_dep, cur_head)
                 input_tk_list.append(cur_tk)
                 input_dep_list.append(cur_dep_triple)
-        """
-        print(input_tk_list)
-        -> ['ROOT', 'My', 'dog', 'likes', 'eating', 'sausage']
-    
-        print(input_dep_list)
-        -> [(1, 'nmod:poss', 2), (2, 'nsubj', 3), (3, 'root', 0), (4, 'xcomp', 3), (5, 'obj', 4)]
-        """
 
     elif _nlp_pipeline == "spacy":
         nlp = spacy.load("en_core_web_sm")
@@ -47,11 +40,5 @@ def preprocessing(_input_text, _nlp_pipeline):
             cur_dep_triple = (cur_id, cur_dep, cur_head)
             input_tk_list.append(cur_tk)
             input_dep_list.append(cur_dep_triple)
-        """
-        print(input_tk_list)
-        -> ['ROOT', 'My', 'dog', 'likes', 'eating', 'sausage']
-    
-        print(input_dep_list)
-        -> [(1, 'poss', 2), (2, 'nsubj', 3), (3, 'ROOT', 0), (4, 'xcomp', 3), (5, 'dobj', 4)]
-        """
+
     return input_tk_list, input_dep_list
