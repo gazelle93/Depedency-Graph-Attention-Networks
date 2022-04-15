@@ -2,50 +2,31 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Dependency_GAT(nn.Module):
+class Dependency_GATLayer(nn.Module):
     def __init__(self, in_dim, out_dim, alpha, dependency_list):
-        super(Dependency_GAT, self).__init__()
-        # dim: dimension of dependency weight
+        super(Dependency_GATLayer, self).__init__()
+        # in_dim: number of tokens
+        # out_dim: dimension of word embedding
         # dependency_list: the entire dependency types
         # reverse_case (default=True): Considering not only the result of dependency representation but also the reversed dependency representation
         
-        """
-        - Text:
-            My dog likes eating sausage.
-            
-        - Universal dependencies: 
-            nmod:poss(dog-2, My-1)
-            nsubj(likes-3, dog-2)
-            root(ROOT-0, likes-3)
-            xcomp(likes-3, eating-4)
-            obj(eating-4, sausage-5)
-            
-        * Dependency can be presented as a directed graph
-                  likes
-                 /     \
-           (nsubj)     (xcomp)
-            |             |
-            dog         eating
-            |             |
-           (nmod:poss)  (obj)
-            |             |
-            My          sausage
-        """
-        self.weight = nn.Linear(in_dim, out_dim, bias=False)
+        self.in_dim = in_dim
+        self.out_dim = out_dim
+        self.weight = nn.Linear(out_dim, out_dim, bias=False)
         self.attn_weight = nn.Linear(out_dim*2, 1, bias=False)
         self.softmax = nn.Softmax(dim=1)
         self.leakyrelu = nn.LeakyReLU(alpha)
         
     def self_loop(self, _input, dependency_triples):
-        self_loop_dict = {0:torch.zeros(len(_input))}
-        h_dict = {0:torch.zeros(len(_input))}
+        self_loop_dict = {0:torch.zeros(self.out_dim)}
+        h_dict = {0:torch.zeros(self.out_dim)}
         
         for dep_triple in dependency_triples:
             cur_governor = dep_triple[2]
             cur_dependent = dep_triple[0]
             
-            self_loop_dict[cur_dependent] = self.weight(_input[cur_governor])
-            h_dict[cur_dependent] = self.weight(_input[cur_governor])
+            self_loop_dict[cur_dependent] = self.weight(_input[cur_governor].T)
+            h_dict[cur_dependent] = self.weight(_input[cur_governor].T)
             
         return self_loop_dict, h_dict
 
@@ -57,12 +38,13 @@ class Dependency_GAT(nn.Module):
             cur_governor = dep_triple[2]
             cur_dependent = dep_triple[0]
             
-            e_governor_dependent = self.attn_weight(torch.cat((self.weight(_input[cur_governor]), self.weight(_input[cur_dependent])), -1))
+            e_governor_dependent = self.attn_weight(torch.cat((self.weight(_input[cur_governor].T), self.weight(_input[cur_dependent].T)), -1))
             e_tensor[cur_governor, cur_dependent] = e_governor_dependent
 
         # Normalize edge attention
         for dep_triple in dependency_triples:
             cur_governor = dep_triple[2]
+            cur_dependent = dep_triple[0]
             
             # masked attention
             zero_attn_mask = -1e18*torch.ones_like(e_tensor[cur_governor])
@@ -70,12 +52,9 @@ class Dependency_GAT(nn.Module):
             e_tensor[cur_governor] = self.softmax(masked_e.view(1,len(masked_e)))
         
         return e_tensor
+        
 
     def forward(self, _input, dependency_triples):
-        # _input: tokenized input text representation in vector space
-        # dependency_triples: (dependent index, dependency, governor index)
-        # * dependent and governor index follows the index of _input
-        
         # self loop of each token
         self_loop_dict, h_dict = self.self_loop(_input, dependency_triples)
 
@@ -87,10 +66,32 @@ class Dependency_GAT(nn.Module):
             cur_governor = dep_triple[2]
             cur_dependent = dep_triple[0]
 
-            cur_attn = attn_score_tensor[cur_governor, cur_dependent] * self.weight(_input[cur_dependent])
+            cur_attn = attn_score_tensor[cur_governor, cur_dependent] * self.weight(_input[cur_dependent].T)
             h_dict[cur_governor] += cur_attn
         
         output_list = list(h_dict.values())
         output_list = self.leakyrelu(torch.stack(output_list))
         
         return output_list
+    
+class GAT(nn.Module):
+    def __init__(self, in_dim, out_dim, alpha, dependency_list, num_layers=1):
+        super(GAT, self).__init__()
+        # in_dim: number of tokens
+        # out_dim: dimension of word embedding
+        # dependency_list: the entire dependency types
+        # reverse_case (default=True): Considering not only the result of dependency representation but also the reversed dependency representation
+        
+        self.num_layers = num_layers
+        self.gat_layer = []
+        for i in range(num_layers):
+            self.gat_layer.append(Dependency_GATLayer(in_dim, out_dim, alpha, dependency_list))
+        
+
+    def forward(self, _input, dependency_triples):
+        h_ = self.gat_layer[0](_input, dependency_triples)
+        if self.num_layers > 1:
+            for i in range(self.num_layers-1):
+                h_ = self.gat_layer[i+1](h_, dependency_triples)
+        
+        return h_
