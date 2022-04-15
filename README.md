@@ -1,5 +1,5 @@
 # Overview
-- Graph Attention Networks (GAT) represents a given graph leveraging masked self-attention layer. This project aims to develop dependency-graph-attention-networks in order to represent the dependency relations of each word from given text utilizing masked self-attention. The output of the dependency-graph-attention-networks is the token-level representation of the sum of the token and its dependency.
+- Graph Attention Networks (GAT) represents a given graph leveraging masked self-attention layer. This project aims to implement pytorch dependency-graph-attention-networks in order to represent the dependency relations of each word from given text utilizing masked self-attention. The output of the dependency-graph-attention-networks is the token-level representation of the sum of the token and its dependency.
 
 # Brief description
 - DepGCN.py
