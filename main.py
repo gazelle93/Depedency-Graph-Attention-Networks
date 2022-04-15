@@ -22,17 +22,13 @@ def main(args):
     
     dependency_list = [x[1] for x in input_dep_list]
 
+    in_dim = len(input_tk_list)
+    out_dim = len(input_rep[0])
+
     # input_dim: word embedding dimension
-    model = Dependency_GAT(in_dim=len(input_tk_list), out_dim=len(input_tk_list), alpha=args.alpha, dependency_list=dependency_list)
-    """
-    print(model)
-    ->GAT(
-      (weight): Linear(in_features=7, out_features=7, bias=False)
-      (attn_weight): Linear(in_features=14, out_features=1, bias=False)
-      (softmax): Softmax(dim=1)
-      (leakyrelu): LeakyReLU(negative_slope=0.1)
-    )
-    """
+    model = Dependency_GAT(in_dim=in_dim, out_dim=out_dim, alpha=args.alpha,
+                           dependency_list=dependency_list, num_layers=args.num_layers)
+    
     output = model(input_rep, input_dep_list)
 
     print(output)
@@ -41,6 +37,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--nlp_pipeline", default="stanza", type=str, help="NLP preprocessing pipeline.")
+    parser.add_argument("--num_layers", default=1, type=int, help="The number of hidden layers of GCN.")
     parser.add_argument("--alpha", default=0.01, type=float, help="Negative slope that controls the angle of the negative slope of LeakyReLU")
 
     args = parser.parse_args()
