@@ -4,7 +4,7 @@
 # Brief description
 - DepGCN.py
 > Output format
-> - output: The sum of token embedding itself and dependency relation that is connected to the governor. (list)
+> - output: List of tensor of the sum of token embedding itself and dependency relation that is connected to the governor. (list)
 - text_processing.py
 > Output format
 > - input_tk_list (list): Tokens of given text based on the selected nlp pipeline.
