@@ -19,15 +19,12 @@ def main(args):
 
     # Simple One-hot encoding is applied. This can be replaced based on the choice of embedding language model.
     input_rep = tk2onehot(input_tk_list)
-    
-    dependency_list = [x[1] for x in input_dep_list]
 
     in_dim = len(input_tk_list)
     out_dim = len(input_rep[0])
 
     # input_dim: word embedding dimension
-    model = Dependency_GAT(in_dim=in_dim, out_dim=out_dim, alpha=args.alpha,
-                           dependency_list=dependency_list, num_layers=args.num_layers)
+    model = Dependency_GAT(in_dim=in_dim, out_dim=out_dim, alpha=args.alpha, num_layers=args.num_layers)
     
     output = model(input_rep, input_dep_list)
 
