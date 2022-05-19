@@ -17,6 +17,9 @@ class Dependency_GATLayer(nn.Module):
         self.softmax = nn.Softmax(dim=1)
         self.leakyrelu = nn.LeakyReLU(alpha)
         
+        nn.init.xavier_uniform_(self.weight)
+        nn.init.xavier_uniform_(self.attn_weight)
+        
     def self_loop(self, _input, dependency_triples):
         self_loop_dict = {0:torch.zeros(self.out_dim)}
         h_dict = {0:torch.zeros(self.out_dim)}
