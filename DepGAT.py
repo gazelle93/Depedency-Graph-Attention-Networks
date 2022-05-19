@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Dependency_GATLayer(nn.Module):
-    def __init__(self, in_dim, out_dim, alpha, dependency_list):
+    def __init__(self, in_dim, out_dim, alpha):
         super(Dependency_GATLayer, self).__init__()
         # in_dim: number of tokens
         # out_dim: dimension of word embedding
@@ -16,9 +16,6 @@ class Dependency_GATLayer(nn.Module):
         self.attn_weight = nn.Linear(out_dim*2, 1, bias=False)
         self.softmax = nn.Softmax(dim=1)
         self.leakyrelu = nn.LeakyReLU(alpha)
-        
-        nn.init.xavier_uniform_(self.weight)
-        nn.init.xavier_uniform_(self.attn_weight)
         
     def self_loop(self, _input, dependency_triples):
         self_loop_dict = {0:torch.zeros(self.out_dim)}
@@ -78,7 +75,7 @@ class Dependency_GATLayer(nn.Module):
         return output_list
     
 class Dependency_GAT(nn.Module):
-    def __init__(self, in_dim, out_dim, alpha, dependency_list, num_layers=1):
+    def __init__(self, in_dim, out_dim, alpha, num_layers=1):
         super(Dependency_GAT, self).__init__()
         # in_dim: number of tokens
         # out_dim: dimension of word embedding
@@ -88,13 +85,13 @@ class Dependency_GAT(nn.Module):
         self.num_layers = num_layers
         self.gat_layer = []
         for i in range(num_layers):
-            self.gat_layer.append(Dependency_GATLayer(in_dim, out_dim, alpha, dependency_list))
+            self.gat_layer.append(Dependency_GATLayer(in_dim, out_dim, alpha))
         
 
     def forward(self, _input, dependency_triples):
-        h_ = self.gat_layer[0](_input, dependency_triples)
+        output = self.gat_layer[0](_input, dependency_triples)
         if self.num_layers > 1:
             for i in range(self.num_layers-1):
-                h_ = self.gat_layer[i+1](h_, dependency_triples)
+                output = self.gat_layer[i+1](output, dependency_triples)
         
-        return h_
+        return output
