@@ -67,7 +67,7 @@ class Dependency_GATLayer(nn.Module):
             cur_governor = dep_triple[2]
             cur_dependent = dep_triple[0]
 
-            cur_attn = attn_score_tensor[cur_governor, cur_dependent] * self.weight(_input[cur_dependent].T)
+            cur_attn = attn_score_tensor[cur_governor, cur_dependent] * self.weight(_input[cur_dependent])
             h_dict[cur_governor] += cur_attn
         
         output_list = list(h_dict.values())
