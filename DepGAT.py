@@ -94,7 +94,8 @@ class Dependency_GAT(nn.Module):
     def forward(self, _input, dependency_triples):
         output = self.gat_layer[0](_input, dependency_triples)
         if self.num_layers > 1:
-            for i in range(self.num_layers-1):
+            for i in range(self.num_layers-2):
                 output = self.gat_layer[i+1](output, dependency_triples)
+            output = self.gat_layer[self.num_layers-1](output, dependency_triples, False)
         
         return output
