@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Dependency_GATLayer(nn.Module):
-    def __init__(self, in_dim, out_dim, alpha):
+    def __init__(self, in_dim, out_dim, alpha, dropout_rate=0.1):
         super(Dependency_GATLayer, self).__init__()
         # in_dim: number of tokens
         # out_dim: dimension of word embedding
@@ -16,6 +16,7 @@ class Dependency_GATLayer(nn.Module):
         self.attn_weight = nn.Linear(out_dim*2, 1, bias=False)
         self.softmax = nn.Softmax(dim=1)
         self.leakyrelu = nn.LeakyReLU(alpha)
+        self.dropout = nn.Dropout(p=dropout_rate)
         
     def self_loop(self, _input, dependency_triples):
         self_loop_dict = {0:torch.zeros(self.out_dim)}
@@ -54,7 +55,7 @@ class Dependency_GATLayer(nn.Module):
         return e_tensor
         
 
-    def forward(self, _input, dependency_triples):
+    def forward(self, _input, dependency_triples, is_dropout=True):
         # self loop of each token
         self_loop_dict, h_dict = self.self_loop(_input, dependency_triples)
 
@@ -70,9 +71,12 @@ class Dependency_GATLayer(nn.Module):
             h_dict[cur_governor] += cur_attn
         
         output_list = list(h_dict.values())
-        output_list = self.leakyrelu(torch.stack(output_list))
         
-        return output_list
+        if is_dropout:
+            return self.dropout(self.leakyrelu(torch.stack(output_list)))
+        
+        
+        return self.leakyrelu(torch.stack(output_list))
     
 class Dependency_GAT(nn.Module):
     def __init__(self, in_dim, out_dim, alpha, num_layers=1):
