@@ -75,7 +75,6 @@ class Dependency_GATLayer(nn.Module):
         if is_dropout:
             return self.dropout(self.leakyrelu(torch.stack(output_list)))
         
-        
         return self.leakyrelu(torch.stack(output_list))
     
 class Dependency_GAT(nn.Module):
